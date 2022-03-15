@@ -27,34 +27,33 @@ workflow bamToFastq {
     call countFlags {
         input:
             bamFile = bamFile
-
     }
 
-    call backExtract { 
+    call nameCheck {
         input:
-            bamFile = bamFile
+            readGroups = countFlags.readGroups,
+            fileName = fileNaming
+    }
+
+    if (nameCheck.valid == true){
+        call backExtract { 
+            input:
+                bamFile = bamFile
+        }
     }
 
     call renameFastqs { 
         input:
-            fileNaming = fileNaming,
-            readGroups = countFlags.readGroups,
-            rawFastqs = backExtract.rawFastqs
+            rawFastqs = backExtract.rawFastqs,
+            rgData = nameCheck.rgData
     }
-
-    #call task { 
-    #    input:
-    #}
-
-    #call repeatedTask as taskName {
-    #    input:
-    #}
 
     output {
         File flagStat = countFlags.bamFileFlagstat
         File readGroups = countFlags.readGroups
-        Array[File] rawFastqs = backExtract.rawFastqs
-        Array[File] modFastqs = renameFastqs.modFastqs
+        Array[File]? rawFastqs = backExtract.rawFastqs
+        Array[File]? modFastqs = renameFastqs.modFastqs
+        String rgData = nameCheck.rgData
 
     } 
 }
@@ -62,14 +61,17 @@ workflow bamToFastq {
 task countFlags {
         input {
             File bamFile
+            String prefix = "output"
+
             Int memory = 24
             Int timeout = 12
             String modules = "samtools/0.1.19"
-            String prefix = "output"
+
         }
 
         parameter_meta {
             bamFile: "A BAM file with one or more readgroups"
+            prefix: "String prepended to flagstat file"
             modules: "Required environment modules"
             memory: "Memory allocated for this job"
             timeout: "Time in hours before task timeout"
@@ -103,9 +105,121 @@ task countFlags {
         }
 }
 
+task nameCheck {
+        input {
+            File readGroups
+            String fileName
+
+            String modules = ""
+            Int memory = 24
+            Int timeout = 12
+        }
+
+        parameter_meta {
+            readGroups: "A TXT file containing information about the merged BAM file"
+            fileName: "The naming scheme for the FASTQ files"
+            modules: "Required environment modules"
+            memory: "Memory allocated for this job"
+            timeout: "Time in hours before task timeout"
+
+        }
+
+        command <<<
+
+        python3<<CODE
+
+        import difflib
+        import re
+        with open(r"~{readGroups}",'r') as rg_data:
+            rg = rg_data.read()
+       
+        fileName = "~{fileName}"
+        
+        def validate(valid="true"):
+            isValid = open("isValid.txt", 'w')
+            isValid.write(valid)
+            isValid.close()
+        
+        validate()
+
+            # Check No. 1:
+            # Comparing RG tags from readgroups file and fileName
+            # Exits if a tag is missing
+
+        inputs = re.findall(r"[^{\}]+(?=})", fileName)
+        tags = list(set(re.findall(r"[^\t:]+(?=:)", rg)))
+
+        if all(i in tags for i in inputs) == False:  
+            print("FAILED: Missing input tag")
+            d = difflib.Differ()
+            diff = d.compare(tags, inputs)
+            errorMessage = '\n'.join(diff)
+            validate("false")
+            raise ValueError("Input tag does not exist:" + '\n' + errorMessage)
+
+            # Check No. 2:
+            # Predicting modified file name:
+            # Exits if non-unique names are created
+
+        rgArray = []
+        dictArray = []
+
+        for line in rg.splitlines():
+            data = line[1:].split()
+            rgArray.append(data)
+
+        for row in rgArray:
+            del row[0]
+            for i in range(len(row)):
+                k = row[i].split(":")
+                row[i] = k
+            dictArray.append({row[i][0]: row[i][1] for i in range(len(row))})
+
+        fastqNames = []
+        rgData = {}
+
+        for j in range(len(dictArray)):
+            idData = []
+            for readNum in [1, 2]:
+                newName = fileName.format_map(dictArray[j])
+                predictedFileName = f"{newName}_{readNum}.fastq.gz"
+                if predictedFileName in fastqNames:
+                    validate("false")
+                    raise ValueError("File name results in non-unique names")
+                else:
+                    fastqNames.append(predictedFileName)
+                    idData.append(predictedFileName)
+            rgData[dictArray[j]["ID"]]=idData
+
+        print(rgData)
+        
+        CODE
+
+        >>>
+
+        runtime {
+            modules: "~{modules}"
+            memory: "~{memory}G"
+            timeout: "~{timeout}"
+        }
+
+        output {
+            String rgData = read_string(stdout())
+            Boolean valid = read_boolean("isValid.txt")
+
+        }
+
+        meta {
+            output_meta: {
+                rgData: "A Python dictionary containing RG data"
+            }
+        }
+}
+
 task backExtract {
         input {
             File bamFile
+
             String modules = "picard/2.21.2"
             Int memory = 24
             Int timeout = 12
@@ -131,9 +245,6 @@ task backExtract {
             RE_REVERSE=true \
             VALIDATION_STRINGENCY=LENIENT
 
-            #rawFastqs=$(ls -d $PWD/*.fastq)
-            #printf '%s\n' ${rawFastqs[*]}
-
         >>>
 
         runtime {
@@ -144,8 +255,7 @@ task backExtract {
 
         output {
 
-            #Array[File] rawFastqs = read_lines(stdout())
-            Array[File] rawFastqs = glob("*.fastq")
+            Array[File]? rawFastqs = glob("*.fastq")
 
         }
 
@@ -158,9 +268,8 @@ task backExtract {
 
 task renameFastqs {
         input {
-            Array[File] rawFastqs
-            String fileNaming
-            File readGroups
+            Array[File]? rawFastqs
+            String rgData
             String modules = ""
             Int memory = 24
             Int timeout = 12
@@ -168,68 +277,31 @@ task renameFastqs {
 
         parameter_meta {
             rawFastqs: "A file array of FASTQ files"
-            fileNaming: "The naming scheme for the FASTQ files"
+            rgData: "A Python array of dictionaries containing RG data"
             modules: "Required environment modules"
             memory: "Memory allocated for this job"
             timeout: "Time in hours before task timeout"
         }
 
         command <<<
-            python3 <<CODE
-            import csv
-            import os
-            import re
-            import difflib
+            python3<<CODE
 
-            ## open readroups.tsv file
-            rg_tsv = open(r"~{readGroups}")
-            rg = csv.reader(rg_tsv, delimiter="\t")
-            
+            import os
+            import ast
+
+            rgData = ast.literal_eval("~{rgData}")
+
             f = "~{sep=' ' rawFastqs}"
             fastqs = f.split()
-            fileName = "~{fileNaming}"
 
-            ## uses EG tag dictionaries to move 
-            ## and rename files into current directory
-
-            def rename(fastq, fileName, rg_dict):
-            # check if input fileName is valid
-                tags = list(rg_dict.keys())
-                inputs = re.findall(r"[^{\}]+(?=})", fileName)
-
-                if all(i in tags for i in inputs) == False:  
-                    print("FAILED: Missing input tag")
-                    d = difflib.Differ()
-                    diff = d.compare(tags, inputs)
-                    print('\n'.join(diff))
-                    exit()
-
-                # rename files
+            for fastq in fastqs:
                 path = os.getcwd()
-                readNum = fastq[-7] # determines r1 or r2
-                newName = fileName.format_map(rg_dict)
-                formattedFileName = f"{path}/{newName}_{readNum}.fastq.gz"
+                fastqID = os.path.basename(fastq)[:-8] # determines ID
+                readNum = int(fastq[-7]) # determines read number
+                newName = rgData[fastqID][(readNum-1)]
+                formattedFileName = f"{path}/{newName}"
                 os.rename(fastq, formattedFileName)
-
-            ## creating an array of dictionaries
-            ## each element contains K-V pair for RG tags
-            ## [probably could be cleaner]
-            dict_array = []
-            for row in rg:
-                del row[0]
-                for i in range(len(row)):
-                    k = row[i].split(":")
-                    row[i] = k
-                dict_array.append({row[i][0]: row[i][1] for i in range(len(row))})
-
-            ## searches through array of fastqs for ID matches
-            ## and renames them accordingly
-            for i in range(len(dict_array)):
-                pattern = str(dict_array[i]["ID"])
-                for fastq in fastqs:
-                    if pattern in fastq:
-                        rename(fastq=fastq, fileName=fileName, rg_dict=dict_array[i])
-                        #one flaw: will delete files if two modFastqs have the same name
+            
             CODE
 
         >>>
@@ -242,7 +314,7 @@ task renameFastqs {
 
         output {
 
-            Array[File] modFastqs = glob("*.fastq.gz")
+            Array[File]? modFastqs = glob("*.fastq.gz")
 
         }
 
