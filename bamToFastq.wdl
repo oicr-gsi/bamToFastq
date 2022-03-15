@@ -50,11 +50,7 @@ workflow bamToFastq {
 
     output {
         File flagStat = countFlags.bamFileFlagstat
-        File readGroups = countFlags.readGroups
-        Array[File]? rawFastqs = backExtract.rawFastqs
         Array[File]? modFastqs = renameFastqs.modFastqs
-        String rgData = nameCheck.rgData
-
     } 
 }
 
