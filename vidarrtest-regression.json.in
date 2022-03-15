@@ -21,7 +21,7 @@
               "provider": "TEST"
             }
           ]
-        }
+        },
         "type": "EXTERNAL"
       },
       "bamToFastq.renameFastqs.modules": null,
