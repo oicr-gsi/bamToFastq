@@ -22,6 +22,7 @@
             }
           ]
         }
+        "type": "EXTERNAL"
       },
       "bamToFastq.renameFastqs.modules": null,
       "bamToFastq.fileNaming": "{PU}_{PL}_test01",
