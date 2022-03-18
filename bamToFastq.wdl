@@ -15,8 +15,24 @@ workflow bamToFastq {
     meta {
         author: "Murto Hilali"
         email: "mhilali@oicr.on.ca"
-        description: "QC workflow to assess UMI components"
+        description: "Generating R1 and R2 from bam files"
         dependencies: [
+            {
+                name: "java/8",
+                url: "https://www.java.com/en/download/manual.jsp"
+            },
+            {
+                name: "samtools/1.9",
+                url: "https://github.com/samtools/samtools/archive/0.1.19.tar.gz"
+            },
+            {
+                name: "picard/2.21.2",
+                url: "https://broadinstitute.github.io/picard/command-line-overview.html"
+            },
+            {
+                name: "python/3.6",
+                url: "https://www.python.org/downloads/"
+            }
         ]
         output_meta: {
             bamFileFlagstat: "A TXT file containing flag information about the BAM file",
@@ -96,7 +112,7 @@ task countFlags {
         meta {
             output_meta: {
                 bamFileFlagstat: "A TXT file containing flag information about the BAM file",
-                readGroups: "A TXT file containing information about the merged BAM file"
+                readGroups: "A TSV file containing information about the merged BAM file"
             }
         }
 }
@@ -207,7 +223,8 @@ task nameCheck {
 
         meta {
             output_meta: {
-                rgData: "A Python dictionary containing RG data"
+                rgData: "A Python dictionary containing RG data",
+                valid: "A boolean value to determine workflow continuation"
             }
         }
 }
@@ -222,14 +239,15 @@ task backExtract {
         }
 
         parameter_meta {
+            bamFile: "A BAM file with one or more readgroups"
             modules: "Required environment modules"
             memory: "Memory allocated for this job"
             timeout: "Time in hours before task timeout"
         }
 
         command <<<
-            module unload cromwell ## tmp for local testing
-            module unload java ## tmp for local testing
+            module unload cromwell ## <- only needed for local testing
+            module unload java ## <- only needed for local testing
             module load picard
 
             java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
@@ -257,7 +275,7 @@ task backExtract {
 
         meta {
             output_meta: {
-                rawFastqs: "A file array of FASTQ files"
+                rawFastqs: "An array of FASTQ files"
             }
         }
 }
@@ -272,7 +290,7 @@ task renameFastqs {
         }
 
         parameter_meta {
-            rawFastqs: "A file array of FASTQ files"
+            rawFastqs: "An array of FASTQ files"
             rgData: "A Python array of dictionaries containing RG data"
             modules: "Required environment modules"
             memory: "Memory allocated for this job"

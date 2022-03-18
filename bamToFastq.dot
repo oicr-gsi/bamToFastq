@@ -1,0 +1,22 @@
+digraph bamToFastq {
+  compound=true;
+  rankdir="TB";
+  "A bam file & a filenaming scheme" -> "countFlags"
+  "countFlags" -> "nameCheck" [label= "   readGroups tsv"]
+  "backExtract" -> "renameFastqs" [label= "   rawFastqs"]
+  "nameCheck" -> "renameFastqs" [headlabel= "new filenames   "]
+  "nameCheck" -> "if nameCheck is valid:" [lhead=cluster_0]
+  "renameFastqs" -> "Renamed and backextracted fastqs"
+  "countFlags" 
+  "nameCheck"
+  "renameFastqs" 
+  "A bam file & a filenaming scheme" [shape=box]
+  "Renamed and backextracted fastqs" [shape=box]
+  
+subgraph cluster_0 {
+  "backExtract"
+  "if nameCheck is valid:" [shape=plaintext]
+}
+      
+}
+
