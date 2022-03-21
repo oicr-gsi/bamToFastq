@@ -318,6 +318,8 @@ task renameFastqs {
             
             CODE
 
+            ls *.fastq.gz > outfilenames
+
         >>>
 
         runtime {
@@ -328,7 +330,7 @@ task renameFastqs {
 
         output {
 
-            Array[File]? modFastqs = glob("*.fastq.gz")
+            Array[File]? modFastqs = read_lines("outfilenames")
 
         }
 
