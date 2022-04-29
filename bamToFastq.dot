@@ -1,0 +1,23 @@
+digraph bamToFastq {
+  compound=true;
+  rankdir="TB";
+  node [shape=diamond style=rounded]
+  "Inputs" -> "countFlags"
+  "countFlags" -> "nameCheck" [label= "   readGroups tsv"]
+  "backExtract" -> "renameFastqs" [label= "   rawFastqs"]
+  "nameCheck" -> "renameFastqs" [headlabel= "new filenames   "]
+  "nameCheck" -> "if nameCheck is valid:" [lhead=cluster_0]
+  "renameFastqs" -> "Outputs"
+  "countFlags" 
+  "nameCheck"
+  "renameFastqs" 
+  "Inputs" [label="{bam file | fileNaming string}"shape=Mrecord]
+  "Outputs" [label="{backextracted FASTQ files}"shape=Mrecord]
+  
+subgraph cluster_0 {
+  "backExtract"
+  "if nameCheck is valid:" [shape=plaintext]
+}
+      
+}
+
