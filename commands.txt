@@ -5,134 +5,55 @@ This section lists command(s) run by bamToFastq workflow
 
 bamToFastq generates R1 and R2 fastqs for BAM files with one or more readgroups.
 
-### Pulling out readgroups and flag data from bam file
-```
-            module load samtools
-            samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
-            samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
-```
-
-### Checking name validity and creating new filenames.
-By default, the fastqs are named using the read IDs. To use RG tags in the file names of the generated fastqs, input paramenter filNaming should be formatted like this:
+### Extract readgroup and flagstatinfo from bam file
+Readgroup information is needed to rename files.  Flagstat information is provided for comparison to the fastq ouput.
 
 ```
-"{tag1}_{tag2}"
-"{PU}_{PL}"
-"{LB}_{PU}_test01"
+samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
+samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
+
 ```
-(fileNaming follows Python 3.9 string-mapping formatting)
+
+### Verify that fields in the requested naming scheme are found in the bam file.
+By default, the fastqs are named using the read IDs. To modify names, readgroup fields can be indicated to use their values, mixing with text strings. The input parameter fileNaming should be formatted like this:
+
+```
+"{tag1}_{tag2}_text"
+eg.
+"{PU}_{PL}". -> {PU}_{PL}_Rn.fastq.gz
+"{LB}_{PU}_test01" -> {LB}_{PU}_test01_Rn.fastq.gz
+
+where Rn is the read number (R1, R2)
+```
 
 The file naming scheme will be declared invalid if:
 - It results in non-unique file names
 - It contains an invalid RG tag
+
+One should inspect the bam header readgroups prior to choosing a naming scheme.
+
 ```
-
-        python3<<CODE
-
-        import difflib
-        import re
-        with open(r"~{readGroups}",'r') as rg_data:
-            rg = rg_data.read()
-       
-        fileName = "~{fileName}"
-        
-        def validate(valid="true"):
-            isValid = open("isValid.txt", 'w')
-            isValid.write(valid)
-            isValid.close()
-        
-        validate()
-
-            # Check No. 1:
-            # Comparing RG tags from readgroups file and fileName
-            # Exits if a tag is missing
-
-        inputs = re.findall(r"[^{\}]+(?=})", fileName)
-        tags = list(set(re.findall(r"[^\t:]+(?=:)", rg)))
-
-        if all(i in tags for i in inputs) == False:  
-            print("FAILED: Missing input tag")
-            d = difflib.Differ()
-            diff = d.compare(tags, inputs)
-            errorMessage = '\n'.join(diff)
-            validate("false")
-            raise ValueError("Input tag does not exist:" + '\n' + errorMessage)
-
-            # Check No. 2:
-            # Predicting modified file name:
-            # Exits if non-unique names are created
-
-        rgArray = []
-        dictArray = []
-
-        for line in rg.splitlines():
-            data = line[1:].split()
-            rgArray.append(data)
-
-        for row in rgArray:
-            del row[0]
-            for i in range(len(row)):
-                k = row[i].split(":")
-                row[i] = k
-            dictArray.append({row[i][0]: row[i][1] for i in range(len(row))})
-
-        fastqNames = []
-        rgData = {}
-
-        for j in range(len(dictArray)):
-            idData = []
-            for readNum in [1, 2]:
-                newName = fileName.format_map(dictArray[j])
-                predictedFileName = f"{newName}_{readNum}.fastq.gz"
-                if predictedFileName in fastqNames:
-                    validate("false")
-                    raise ValueError("File name results in non-unique names")
-                else:
-                    fastqNames.append(predictedFileName)
-                    idData.append(predictedFileName)
-            rgData[dictArray[j]["ID"]]=idData
-
-        print(rgData)
-        
-        CODE
+inline python code available in the WDL file
 
 ```
 ### Backextract fastq files from bam file per readgroup.
 ```
-            module unload cromwell ## <- only needed for local testing
-            module unload java ## <- only needed for local testing
-            module load picard
-
-            java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
-            INPUT=~{bamFile} \
-            RG_TAG="ID" \
-            OUTPUT_DIR=. \
-            OUTPUT_PER_RG=true \
-            NON_PF=true \
-            RE_REVERSE=true \
-            VALIDATION_STRINGENCY=LENIENT
+java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
+     INPUT=~{bamFile} \
+     RG_TAG="ID" \
+     OUTPUT_DIR=. \
+     OUTPUT_PER_RG=true \
+     COMPRESS_OUTPUTS_PER_RG=true \
+     NON_PF=true \
+     RE_REVERSE=true \
+     VALIDATION_STRINGENCY=LENIENT
 
 ```
+
 ### Rename fastqs based on naming scheme.
+the default naming scheme is to use the RG IDs.  If an alternate naming pattern was provided then files will be renamed
+
 ```
-            python3<<CODE
-
-            import os
-            import ast
-
-            rgData = ast.literal_eval("~{rgData}")
-
-            f = "~{sep=' ' rawFastqs}"
-            fastqs = f.split()
-
-            for fastq in fastqs:
-                path = os.getcwd()
-                fastqID = os.path.basename(fastq)[:-8] # determines ID
-                readNum = int(fastq[-7]) # determines read number
-                newName = rgData[fastqID][(readNum-1)]
-                formattedFileName = f"{path}/{newName}"
-                os.rename(fastq, formattedFileName)
-            
-            CODE
+inline python code available in the WDL file
 
 ```
