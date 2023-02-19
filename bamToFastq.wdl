@@ -3,7 +3,7 @@ version 1.0
 workflow bamToFastq {
     input {
         File bamFile
-        String fileNaming
+        String fileNaming = "{ID}"
     }
 
     parameter_meta {
@@ -13,9 +13,9 @@ workflow bamToFastq {
     }
 
     meta {
-        author: "Murto Hilali"
-        email: "mhilali@oicr.on.ca"
-        description: "Generating R1 and R2 from bam files"
+        author: "Murto Hilali, Lawrence Heisler"
+        email: "mhilali@oicr.on.ca, lheisler@oicr.on.ca"
+        description: "Given aligned reads in bam format, this workflow will backextract to generate fastq files based on the readgroups.  By default, the files are named based on the readgroup IDs, but a custom naming scheme based on other readgroup fields can be provided.  This takes the form of mixing text with {FD} symbols, where FD is a readgroup FD (SM, PU, etc)"
         dependencies: [
             {
                 name: "java/8",
@@ -35,22 +35,29 @@ workflow bamToFastq {
             }
         ]
         output_meta: {
-            bamFileFlagstat: "A TXT file containing flag information about the BAM file",
-            readGroups: "A TXT file containing information about the merged BAM file"
+            bamFileFlagstat: "A TXT file containing flag information about the bam file",
+            fastq: "one or more fastq files as determined by the readgroup information in the bam file"
         }
     }
-
-    call countFlags {
+    
+    # call function to assess content with flagstat and pull out the readgroups
+    call examineBam {
         input:
             bamFile = bamFile
     }
 
+    ### check on the rg names before doing anything
+    ### by default this will check that the ID tag is present, which it should be
+    ### if fileRenaming has other values, it will look to ensure those tags are present
     call nameCheck {
-        input:
-            readGroups = countFlags.readGroups,
-            fileName = fileNaming
+           input:
+              readGroups = examineBam.readGroups,
+              fileName = fileNaming
     }
 
+    
+    ### proceed with backextraction only if the default ID is indicating for filename
+    ###. or if the namecheck passed
     if (nameCheck.valid == true){
         call backExtract { 
             input:
@@ -58,19 +65,22 @@ workflow bamToFastq {
         }
     }
 
-    call renameFastqs { 
+    if (fileNaming != "{ID}"){
+      call renameFastqs { 
         input:
-            rawFastqs = backExtract.rawFastqs,
-            rgData = nameCheck.rgData
+          rawFastqs = backExtract.rawFastqs,
+          rgData = nameCheck.rgData
+      }
     }
 
+
     output {
-        File flagStat = countFlags.bamFileFlagstat
-        Array[File]? modFastqs = renameFastqs.modFastqs
+      File flagStat = examineBam.bamFileFlagstat
+      Array[File]? fastq = select_first([renameFastqs.modFastqs,backExtract.rawFastqs])
     } 
 }
 
-task countFlags {
+task examineBam {
         input {
             File bamFile
             String prefix = "output"
@@ -90,8 +100,6 @@ task countFlags {
         }
 
         command <<<
-
-            module load samtools
             samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
             samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
         >>>
@@ -255,9 +263,12 @@ task backExtract {
             RG_TAG="ID" \
             OUTPUT_DIR=. \
             OUTPUT_PER_RG=true \
+            COMPRESS_OUTPUTS_PER_RG=true \
             NON_PF=true \
             RE_REVERSE=true \
             VALIDATION_STRINGENCY=LENIENT
+
+            ls *.fastq.gz > outfilenames            
 
         >>>
 
@@ -269,8 +280,8 @@ task backExtract {
 
         output {
 
-            Array[File]? rawFastqs = glob("*.fastq")
-
+            #Array[File]? rawFastqs = glob("*.fastq.gz")
+            Array[File]? rawFastqs = read_lines("outfilenames")
         }
 
         meta {
@@ -302,6 +313,7 @@ task renameFastqs {
 
             import os
             import ast
+            import re
 
             rgData = ast.literal_eval("~{rgData}")
 
@@ -309,12 +321,19 @@ task renameFastqs {
             fastqs = f.split()
 
             for fastq in fastqs:
-                path = os.getcwd()
-                fastqID = os.path.basename(fastq)[:-8] # determines ID
-                readNum = int(fastq[-7]) # determines read number
-                newName = rgData[fastqID][(readNum-1)]
-                formattedFileName = f"{path}/{newName}"
-                os.rename(fastq, formattedFileName)
+               path = os.getcwd()
+               ## get the filename, without the extension
+               fastqID = re.sub(".fastq.gz","",os.path.basename(fastq))
+               # determines read number
+               readNum = int(fastqID[-1])
+               ### get rid of the last two characters _N
+               fastqID = fastqID[:-2]
+               ### get the new name from the rgData dictionary
+               newName = rgData[fastqID][(readNum-1)]
+               ### format the file name
+               formattedFileName = f"{path}/{newName}"
+               ### rename the files
+               os.rename(fastq, formattedFileName)
             
             CODE
 

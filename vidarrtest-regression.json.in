@@ -2,15 +2,15 @@
   {
     "arguments": {
       "bamToFastq.nameCheck.timeout": null,
-      "bamToFastq.countFlags.modules": "samtools/0.1.19",
+      "bamToFastq.examineBam.modules": "samtools/0.1.19",
       "bamToFastq.nameCheck.memory": null,
       "bamToFastq.backExtract.timeout": null,
-      "bamToFastq.countFlags.memory": null,
+      "bamToFastq.examineBam.memory": null,
       "bamToFastq.backExtract.memory": null,
       "bamToFastq.renameFastqs.memory": null,
       "bamToFastq.nameCheck.modules": null,
-      "bamToFastq.countFlags.timeout": null,
-      "bamToFastq.countFlags.prefix": null,
+      "bamToFastq.examineBam.timeout": null,
+      "bamToFastq.examineBam.prefix": null,
       "bamToFastq.backExtract.modules": "picard/2.21.2",
       "bamToFastq.bamFile": {
         "contents": {
@@ -64,15 +64,15 @@
   {
     "arguments": {
       "bamToFastq.nameCheck.timeout": null,
-      "bamToFastq.countFlags.modules": "samtools/0.1.19",
+      "bamToFastq.examineBam.modules": "samtools/0.1.19",
       "bamToFastq.nameCheck.memory": null,
       "bamToFastq.backExtract.timeout": null,
-      "bamToFastq.countFlags.memory": null,
+      "bamToFastq.examineBam.memory": null,
       "bamToFastq.backExtract.memory": null,
       "bamToFastq.renameFastqs.memory": null,
       "bamToFastq.nameCheck.modules": null,
-      "bamToFastq.countFlags.timeout": null,
-      "bamToFastq.countFlags.prefix": null,
+      "bamToFastq.examineBam.timeout": null,
+      "bamToFastq.examineBam.prefix": null,
       "bamToFastq.backExtract.modules": "picard/2.21.2",
       "bamToFastq.bamFile": {
         "contents": {

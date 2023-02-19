@@ -1,9 +1,8 @@
 # bamToFastq
 
-Generating R1 and R2 from bam files
+Given aligned reads in bam format, this workflow will backextract to generate fastq files based on the readgroups.  By default, the files are named based on the readgroup IDs, but a custom naming scheme based on other readgroup fields can be provided.  This takes the form of mixing text with {FD} symbols, where FD is a readgroup FD (SM, PU, etc)
 
 ## Overview
-![](./bamToFastq.png?raw=true "Workflow diagram")
 
 ## Dependencies
 
@@ -26,21 +25,21 @@ java -jar cromwell.jar run bamToFastq.wdl --inputs inputs.json
 Parameter|Value|Description
 ---|---|---
 `bamFile`|File|A BAM file with one or more readgroups
-`fileNaming`|String|The naming scheme for the extracted FASTQs
 
 
 #### Optional workflow parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
+`fileNaming`|String|"{ID}"|The naming scheme for the extracted FASTQs
 
 
 #### Optional task parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
-`countFlags.prefix`|String|"output"|String prepended to flagstat file
-`countFlags.memory`|Int|24|Memory allocated for this job
-`countFlags.timeout`|Int|12|Time in hours before task timeout
-`countFlags.modules`|String|"samtools/0.1.19"|Required environment modules
+`examineBam.prefix`|String|"output"|String prepended to flagstat file
+`examineBam.memory`|Int|24|Memory allocated for this job
+`examineBam.timeout`|Int|12|Time in hours before task timeout
+`examineBam.modules`|String|"samtools/0.1.19"|Required environment modules
 `nameCheck.modules`|String|""|Required environment modules
 `nameCheck.memory`|Int|24|Memory allocated for this job
 `nameCheck.timeout`|Int|12|Time in hours before task timeout
@@ -57,7 +56,7 @@ Parameter|Value|Default|Description
 Output | Type | Description
 ---|---|---
 `flagStat`|File|A TXT file containing flag information about the BAM file
-`modFastqs`|Array[File]?|FASTQs renamed in accordance to input
+`fastq`|Array[File]?|one or more fastq files as determined by the readgroup information in the bam file
 
 
 ## Commands
