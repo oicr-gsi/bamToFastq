@@ -94,7 +94,7 @@ Output | Type | Description
  One should inspect the bam header readgroups prior to choosing a naming scheme.
  
  ```
- inline python code available in the WDL file
+ inline python code for assessing fileNaming request available in the WDL file
  
  ```
  ### Backextract fastq files from bam file per readgroup.
@@ -115,7 +115,7 @@ Output | Type | Description
  the default naming scheme is to use the RG IDs.  If an alternate naming pattern was provided then files will be renamed
  
  ```
- inline python code available in the WDL file
+ inline python code to rename files available in the WDL file
  
  ```
  ## Support
