@@ -10,7 +10,8 @@ Readgroup information is needed to rename files.  Flagstat information is provid
 
 ```
 samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
-samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
+samtools stats ~{bamFile} > ~{prefix}.samstats.txt
+samtools view -H ~{bamFile} | grep -G "^@RG" > ~{prefix}.readgroups.tsv
 
 ```
 
@@ -36,6 +37,15 @@ One should inspect the bam header readgroups prior to choosing a naming scheme.
 inline python code for assessing fileNaming request available in the WDL file
 
 ```
+
+
+### Sort the bam file by readname to remove any by-mapping-position ordering of reads
+```
+   samtools sort -n ~{bamFileToSort} -O bam -o unsorted.bam
+```
+
+
+
 ### Backextract fastq files from bam file per readgroup.
 ```
 java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \

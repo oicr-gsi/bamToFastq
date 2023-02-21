@@ -10,7 +10,7 @@ workflow bamToFastq {
     parameter_meta {
         bamFile: "A BAM file with one or more readgroups"
         fileNaming: "The naming scheme for the extracted FASTQs"
-
+        outputFilePrefix: "prefix to use to identify bam summary files"
     }
 
     meta {
