@@ -139,6 +139,15 @@ Output | Type | Description
  inline python code to rename files available in the WDL file
  
  ```
+ 
+ 
+ ### Generate fastqc reports for each fastq file
+ 
+ ```
+  fastqc ~{fastq}
+ 
+ ```
+ 
  ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .

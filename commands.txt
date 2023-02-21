@@ -67,3 +67,12 @@ the default naming scheme is to use the RG IDs.  If an alternate naming pattern 
 inline python code to rename files available in the WDL file
 
 ```
+
+
+### Generate fastqc reports for each fastq file
+
+```
+ fastqc ~{fastq}
+
+```
+
