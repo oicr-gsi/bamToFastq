@@ -584,7 +584,7 @@ task summarize {
           echo -e "fastq total\t$totalreads"  >> "~{id}.summary.txt"
 
           echo ""  >> "~{id}.summary.txt"
-          echo "Fastq Sequence Length Distributions"  >> "~{id}.summary.txt"
+          echo "fastq Sequence Length Distributions"  >> "~{id}.summary.txt"
           for f in $files
           do
             id=`basename $f "_fastqc_data.txt"`	
