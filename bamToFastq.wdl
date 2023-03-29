@@ -582,6 +582,16 @@ task summarize {
             totalreads=$(($totalreads + $count)) 
           done
           echo -e "fastq total\t$totalreads"  >> "~{id}.summary.txt"
+
+          echo ""  >> "~{id}.summary.txt"
+          echo "Fastq Sequence Length Distributions"  >> "~{id}.summary.txt"
+          for f in $files
+          do
+            id=`basename $f "_fastqc_data.txt"`	
+            echo $id  >> "~{id}.summary.txt"
+            cat $f | grep "Sequence Length Distribution" -A 999999999 | grep "Sequence Duplication Levels" -B 999999999 | grep -v ">>" >> "~{id}.summary.txt"
+          done
+
         >>>
 
         runtime {
