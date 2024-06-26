@@ -54,10 +54,10 @@ Parameter|Value|Default|Description
 
 ### Outputs
 
-Output | Type | Description
----|---|---
-`flagStat`|File|A TXT file containing flag information about the BAM file
-`modFastqs`|Array[File]?|FASTQs renamed in accordance to input
+Output | Type | Description | Labels
+---|---|---|---
+`flagStat`|File|A TXT file containing flag information about the BAM file|
+`modFastqs`|Array[File]?|FASTQs renamed in accordance to input|
 
 
 ## Commands
