@@ -34,10 +34,16 @@ workflow bamToFastq {
                 url: "https://www.python.org/downloads/"
             }
         ]
-        output_meta: {
-            bamFileFlagstat: "A TXT file containing flag information about the BAM file",
-            readGroups: "A TXT file containing information about the merged BAM file"
-        }
+    output_meta: {
+    bamFileFlagstat: {
+        description: "A TXT file containing flag information about the BAM file",
+        vidarr_label: "bamFileFlagstat"
+    },
+    readGroups: {
+        description: "A TXT file containing information about the merged BAM file",
+        vidarr_label: "readGroups"
+    }
+}
     }
 
     call countFlags {
