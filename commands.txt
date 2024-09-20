@@ -1,4 +1,5 @@
 ## Commands
+
 This section lists command(s) run by bamToFastq workflow
 
 * Running bamToFastq
@@ -6,13 +7,15 @@ This section lists command(s) run by bamToFastq workflow
 bamToFastq generates R1 and R2 fastqs for BAM files with one or more readgroups.
 
 ### Pulling out readgroups and flag data from bam file
+
 ```
-            module load samtools
-            samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
-            samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
+    module load samtools
+    samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
+    samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
 ```
 
 ### Checking name validity and creating new filenames.
+
 By default, the fastqs are named using the read IDs. To use RG tags in the file names of the generated fastqs, input paramenter filNaming should be formatted like this:
 
 ```
@@ -25,8 +28,8 @@ By default, the fastqs are named using the read IDs. To use RG tags in the file 
 The file naming scheme will be declared invalid if:
 - It results in non-unique file names
 - It contains an invalid RG tag
-```
 
+```
         python3<<CODE
 
         import difflib
@@ -98,41 +101,68 @@ The file naming scheme will be declared invalid if:
 
 ```
 ### Backextract fastq files from bam file per readgroup.
-```
-            module unload cromwell ## <- only needed for local testing
-            module unload java ## <- only needed for local testing
-            module load picard
 
-            java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
-            INPUT=~{bamFile} \
-            RG_TAG="ID" \
-            OUTPUT_DIR=. \
-            OUTPUT_PER_RG=true \
-            NON_PF=true \
-            RE_REVERSE=true \
-            VALIDATION_STRINGENCY=LENIENT
+```
+    java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
+    INPUT=~{bamFile} \
+    RG_TAG="ID" \
+    OUTPUT_DIR=. \
+    OUTPUT_PER_RG=true \
+    NON_PF=true \
+    RE_REVERSE=true \
+    VALIDATION_STRINGENCY=LENIENT
 
 ```
 ### Rename fastqs based on naming scheme.
+
 ```
-            python3<<CODE
+    python3<<CODE
 
-            import os
-            import ast
+    import os
+    import ast
 
-            rgData = ast.literal_eval("~{rgData}")
+    rgData = ast.literal_eval("~{rgData}")
 
-            f = "~{sep=' ' rawFastqs}"
-            fastqs = f.split()
+    f = "~{sep=' ' rawFastqs}"
+    fastqs = f.split()
 
-            for fastq in fastqs:
-                path = os.getcwd()
-                fastqID = os.path.basename(fastq)[:-8] # determines ID
-                readNum = int(fastq[-7]) # determines read number
-                newName = rgData[fastqID][(readNum-1)]
-                formattedFileName = f"{path}/{newName}"
-                os.rename(fastq, formattedFileName)
-            
-            CODE
+    for fastq in fastqs:
+	path = os.getcwd()
+	fastqID = os.path.basename(fastq)[:-8] # determines ID
+	readNum = int(fastq[-7]) # determines read number
+	newName = rgData[fastqID][(readNum-1)]
+	formattedFileName = f"{path}/{newName}"
+	os.rename(fastq, formattedFileName)
+    
+    CODE
+
+    ls *.fastq.gz > outfilenames
+
+```
+
+### Copy out files if output directory specified
+
+```
+  set -euxo pipefail
+  if [[ -e ~{outputDir} && -d ~{outputDir} ]]; then
+    cp ~{Fastq} ~{outputDir}
+    echo "File ~{basename(Fastq)} copied to ~{outputDir}"
+  else
+    echo "Final Output Directory was not configured, ~{basename(Fastq)} was not provisioned properly"
+  fi
+```
+
+### Compose log file from messages produced by copy out shard
+
+```
+  python3 <<CODE
+  import json
+  import re
+  m_lines = re.split(",", "~{sep=',' messages}")
+  with open("copy_out.log", "w") as log:
+      for line in m_lines:
+	  log.write(line + "\n")
+  log.close()
+  CODE
 
 ```
