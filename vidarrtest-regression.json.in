@@ -111,12 +111,12 @@
       "write_to_cache": false,
       "read_from_cache": false
     },
-    "id": "bamToFastq_dataset01",
+    "id": "bamToFastq_dataset01m",
     "metadata": {
       "bamToFastq.flagStat": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -124,7 +124,7 @@
       "bamToFastq.copyLog": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
