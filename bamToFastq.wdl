@@ -4,12 +4,13 @@ workflow bamToFastq {
     input {
         File bamFile
         String fileNaming
+        String finalOutputDirectory = ""
     }
 
     parameter_meta {
         bamFile: "A BAM file with one or more readgroups"
         fileNaming: "The naming scheme for the extracted FASTQs"
-
+        finalOutputDirectory: "Optional final output directory. Copy out fastq files using a task"
     }
 
     meta {
@@ -22,7 +23,7 @@ workflow bamToFastq {
                 url: "https://www.java.com/en/download/manual.jsp"
             },
             {
-                name: "samtools/1.9",
+                name: "samtools/1.14",
                 url: "https://github.com/samtools/samtools/archive/0.1.19.tar.gz"
             },
             {
@@ -35,15 +36,19 @@ workflow bamToFastq {
             }
         ]
     output_meta: {
-    bamFileFlagstat: {
+    flagStat: {
         description: "A TXT file containing flag information about the BAM file",
-        vidarr_label: "bamFileFlagstat"
+        vidarr_label: "flagStat"
     },
-    readGroups: {
-        description: "A TXT file containing information about the merged BAM file",
-        vidarr_label: "readGroups"
+    modFastqs: {
+        description: "An optional array of fastq.gz files",
+        vidarr_label: "modFastqs"
+    },
+    copyLog: {
+        description: "log file from copy out task, provisioned if a custom output dir requested",
+        vidarr_label: "copyLog"
     }
-}
+    }
     }
 
     call countFlags {
@@ -64,26 +69,50 @@ workflow bamToFastq {
         }
     }
 
-    call renameFastqs { 
+    if (finalOutputDirectory != "") {
+      call renameFastqs as haveCustomDirRename {
         input:
             rawFastqs = backExtract.rawFastqs,
             rgData = nameCheck.rgData
+      }
+
+      scatter(fq in select_first([haveCustomDirRename.modFastqs])) {
+        call copyOutFastq {
+           input:
+               Fastq = fq,
+               outputDir = finalOutputDirectory 
+        }
+      }
+
+      call composeLog {
+        input:
+            messages = copyOutFastq.message
+      }
+
+    } 
+
+    if (finalOutputDirectory == "") {
+      call renameFastqs as noCustomDirRename {
+        input:
+            rawFastqs = backExtract.rawFastqs,
+            rgData = nameCheck.rgData
+      }
     }
 
     output {
         File flagStat = countFlags.bamFileFlagstat
-        Array[File]? modFastqs = renameFastqs.modFastqs
-    } 
+        Array[File]? modFastqs = noCustomDirRename.modFastqs
+        File? copyLog = composeLog.log
+    }
 }
 
 task countFlags {
         input {
             File bamFile
             String prefix = "output"
-
             Int memory = 24
             Int timeout = 12
-            String modules = "samtools/0.1.19"
+            String modules = "samtools/1.14"
 
         }
 
@@ -96,8 +125,7 @@ task countFlags {
         }
 
         command <<<
-
-            module load samtools
+            set -euo pipefail
             samtools flagstat ~{bamFile} > ~{prefix}.flagstat.txt
             samtools view -H ~{bamFile} | grep -G "^@RG" > readgroups.tsv
         >>>
@@ -109,10 +137,8 @@ task countFlags {
         }
 
         output {
-
             File bamFileFlagstat = "~{prefix}.flagstat.txt"
             File readGroups = "readgroups.tsv"
-
         }
 
         meta {
@@ -127,8 +153,6 @@ task nameCheck {
         input {
             File readGroups
             String fileName
-
-            String modules = ""
             Int memory = 24
             Int timeout = 12
         }
@@ -136,7 +160,6 @@ task nameCheck {
         parameter_meta {
             readGroups: "A TXT file containing information about the merged BAM file"
             fileName: "The naming scheme for the FASTQ files"
-            modules: "Required environment modules"
             memory: "Memory allocated for this job"
             timeout: "Time in hours before task timeout"
 
@@ -216,7 +239,6 @@ task nameCheck {
         >>>
 
         runtime {
-            modules: "~{modules}"
             memory: "~{memory}G"
             timeout: "~{timeout}"
         }
@@ -224,7 +246,6 @@ task nameCheck {
         output {
             String rgData = read_string(stdout())
             Boolean valid = read_boolean("isValid.txt")
-
         }
 
         meta {
@@ -238,7 +259,6 @@ task nameCheck {
 task backExtract {
         input {
             File bamFile
-
             String modules = "picard/2.21.2"
             Int memory = 24
             Int timeout = 12
@@ -252,10 +272,6 @@ task backExtract {
         }
 
         command <<<
-            module unload cromwell ## <- only needed for local testing
-            module unload java ## <- only needed for local testing
-            module load picard
-
             java -Xmx20g -jar $PICARD_ROOT/picard.jar SamToFastq \
             INPUT=~{bamFile} \
             RG_TAG="ID" \
@@ -264,7 +280,6 @@ task backExtract {
             NON_PF=true \
             RE_REVERSE=true \
             VALIDATION_STRINGENCY=LENIENT
-
         >>>
 
         runtime {
@@ -274,9 +289,7 @@ task backExtract {
         }
 
         output {
-
             Array[File]? rawFastqs = glob("*.fastq")
-
         }
 
         meta {
@@ -310,7 +323,6 @@ task renameFastqs {
             import ast
 
             rgData = ast.literal_eval("~{rgData}")
-
             f = "~{sep=' ' rawFastqs}"
             fastqs = f.split()
 
@@ -335,15 +347,96 @@ task renameFastqs {
         }
 
         output {
-
             Array[File]? modFastqs = read_lines("outfilenames")
-
         }
 
         meta {
             output_meta: {
                 modFastqs: "FASTQs renamed in accordance to input"
-
             }
         }
+}
+
+task copyOutFastq {
+        input {
+            File Fastq
+            String outputDir
+            Int memory = 24
+            Int timeout = 12
+        }
+
+        parameter_meta {
+            Fastq: "FASTQ file to copy"
+            outputDir: "Oputput directory"
+            memory: "Memory allocated for this job"
+            timeout: "Time in hours before task timeout"
+        }
+
+        command <<<
+          set -euxo pipefail
+          if [[ -e ~{outputDir} && -d ~{outputDir} ]]; then
+            cp ~{Fastq} ~{outputDir}
+            echo "File ~{basename(Fastq)} copied to ~{outputDir}"
+          else
+            echo "Final Output Directory was not configured, ~{basename(Fastq)} was not provisioned properly"
+          fi
+        >>>
+
+        runtime {
+            memory: "~{memory}G"
+            timeout: "~{timeout}"
+        }
+
+        output {
+            String message = read_string(stdout())
+        }
+
+        meta {
+            output_meta: {
+                message: "Message from the copy task"
+            }
+        }
+}
+
+task composeLog {
+        input {
+            Array[String] messages
+            Int memory = 4
+            Int timeout = 2
+        }
+
+        parameter_meta {
+            messages: "log messages from copyOut task"
+            memory: "Memory allocated for this job"
+            timeout: "Time in hours before task timeout"
+        }
+
+        command <<<
+          python3 <<CODE
+          import json
+          import re
+          m_lines = re.split(",", "~{sep=',' messages}")
+          with open("copy_out.log", "w") as log:
+              for line in m_lines:
+                  log.write(line + "\n")
+          log.close()
+          CODE
+        >>>
+
+        runtime {
+            memory: "~{memory}G"
+            timeout: "~{timeout}"
+        }
+
+        output {
+            File log = "copy_out.log"
+        }
+
+        meta {
+            output_meta: {
+                log: "Log file with all messages from copyOut task"
+            }
+        }
+
+
 }
