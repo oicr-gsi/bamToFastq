@@ -62,7 +62,7 @@
       "bamToFastq.copyLog": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -132,7 +132,7 @@
       "bamToFastq.modFastqs": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -218,7 +218,7 @@
       "bamToFastq.copyLog": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset02_@JENKINSID@"
               }
           ],
           "type": "ALL"
