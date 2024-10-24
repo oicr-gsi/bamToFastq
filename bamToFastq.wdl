@@ -42,14 +42,8 @@ workflow bamToFastq {
 		description: "A TXT file containing flag information about the BAM file",
 		vidarr_label: "bamFileFlagstat"
 	    },
-	    fastqs: {
-		description: "An optional array of fastq.gz files",
-		vidarr_label: "fastqs"
-	    },
-            fastqc: {
-                description: "An optional array of FastQC report files",
-                vidarr_label: "fastqc"
-            },
+	    fastqs: "An optional array of fastq.gz files",
+            fastqc: "An optional array of FastQC report files",
 	    copyLog: {
 		description: "log file from copy out task, provisioned if a custom output dir requested",
 		vidarr_label: "copyLog"

@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.2.0] - 2024-10-24
+### Added
+- Earlier added code (was sitting in a stale branch)
+- functions for additional checks, stats and QC summary
+### Changed
+- adjusted regression tests
+
 ## [1.1.0] - 2024-09-24
 ### Changed
 [GRD-818](https://jira.oicr.on.ca/browse/GRD-818) - modify bamToFastq.wdl to include a copy out task
