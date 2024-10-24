@@ -2,21 +2,21 @@
   {
     "arguments": {
       "bamToFastq.nameCheck.timeout": null,
-      "bamToFastq.countFlags.modules": "samtools/1.14",
       "bamToFastq.finalOutputDirectory": null,
+      "bamToFastq.examineBam.modules": "samtools/1.16.1",
       "bamToFastq.nameCheck.memory": null,
       "bamToFastq.backExtract.timeout": null,
-      "bamToFastq.countFlags.memory": null,
+      "bamToFastq.examineBam.memory": null,
       "bamToFastq.backExtract.memory": null,
       "bamToFastq.haveCustomDirRename.memory": null,
       "bamToFastq.noCustomDirRename.memory": null,
       "bamToFastq.nameCheck.modules": null,
-      "bamToFastq.countFlags.timeout": null,
-      "bamToFastq.countFlags.prefix": null,
       "bamToFastq.composeLog.memory": null,
       "bamToFastq.composeLog.timeout": null,
       "bamToFastq.copyOutFastq.memory": null,
       "bamToFastq.copyOutFastq.timeout": null,
+      "bamToFastq.examineBam.timeout": null,
+      "bamToFastq.examineBam.prefix": null,
       "bamToFastq.backExtract.modules": "picard/2.21.2",
       "bamToFastq.bamFile": {
         "contents": {
@@ -32,7 +32,7 @@
       },
       "bamToFastq.haveCustomDirRename.modules": null,
       "bamToFastq.noCustomDirRename.modules": null,
-      "bamToFastq.fileNaming": "{PU}_{PL}_test01",
+      "bamToFastq.fileNaming": "{LB}_{PU}",
       "bamToFastq.haveCustomDirRename.timeout": null,
       "bamToFastq.noCustomDirRename.timeout": null
     },
@@ -43,18 +43,34 @@
     },
     "id": "bamToFastq_dataset01",
     "metadata": {
-      "bamToFastq.flagStat": {
+      "bamToFastq.bamFileFlagstat": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
       },
-      "bamToFastq.modFastqs": {
+      "bamToFastq.fastqc": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.fastqs": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.summary": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -62,7 +78,7 @@
       "bamToFastq.copyLog": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -72,7 +88,7 @@
       {
           "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
           "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.1.0/bamToFastq_dataset01.metrics",
+          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.2.0/bamToFastq_dataset01.metrics",
           "type": "script"
       }
     ]
@@ -80,11 +96,11 @@
   {
     "arguments": {
       "bamToFastq.nameCheck.timeout": null,
-      "bamToFastq.countFlags.modules": "samtools/1.14",
       "bamToFastq.finalOutputDirectory": "/.mounts/labs/gsi/testdata/bamToFastq/output",
+      "bamToFastq.examineBam.modules": "samtools/1.16.1",
       "bamToFastq.nameCheck.memory": null,
       "bamToFastq.backExtract.timeout": null,
-      "bamToFastq.countFlags.memory": null,
+      "bamToFastq.examineBam.memory": null,
       "bamToFastq.backExtract.memory": null,
       "bamToFastq.haveCustomDirRename.memory": null,
       "bamToFastq.noCustomDirRename.memory": null,
@@ -110,7 +126,7 @@
       },
       "bamToFastq.haveCustomDirRename.modules": null,
       "bamToFastq.noCustomDirRename.modules": null,
-      "bamToFastq.fileNaming": "{PU}_{PL}_test01",
+      "bamToFastq.fileNaming": "{LB}_{PU}",
       "bamToFastq.haveCustomDirRename.timeout": null,
       "bamToFastq.noCustomDirRename.timeout": null
     },
@@ -121,7 +137,7 @@
     },
     "id": "bamToFastq_dataset01m",
     "metadata": {
-      "bamToFastq.flagStat": {
+      "bamToFastq.bamFileFlagstat": {
           "contents": [
               {
                   "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
@@ -129,7 +145,23 @@
           ],
           "type": "ALL"
       },
-      "bamToFastq.modFastqs": {
+      "bamToFastq.fastqc": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.fastqs": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.summary": {
           "contents": [
               {
                   "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
@@ -150,7 +182,7 @@
       {
           "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
           "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.1.0/bamToFastq_dataset01m.metrics",
+          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.2.0/bamToFastq_dataset01m.metrics",
           "type": "script"
       }
     ]
@@ -158,7 +190,7 @@
   {
     "arguments": {
       "bamToFastq.nameCheck.timeout": null,
-      "bamToFastq.countFlags.modules": "samtools/1.14",
+      "bamToFastq.countFlags.modules": "samtools/1.16.1",
       "bamToFastq.finalOutputDirectory": null,
       "bamToFastq.nameCheck.memory": null,
       "bamToFastq.backExtract.timeout": null,
@@ -171,8 +203,8 @@
       "bamToFastq.haveCustomDirRename.memory": null,
       "bamToFastq.noCustomDirRename.memory": null,
       "bamToFastq.nameCheck.modules": null,
-      "bamToFastq.countFlags.timeout": null,
-      "bamToFastq.countFlags.prefix": null,
+      "bamToFastq.examineBam.timeout": null,
+      "bamToFastq.examineBam.prefix": null,
       "bamToFastq.backExtract.modules": "picard/2.21.2",
       "bamToFastq.bamFile": {
         "contents": {
@@ -188,7 +220,7 @@
       },
       "bamToFastq.haveCustomDirRename.modules": null,
       "bamToFastq.noCustomDirRename.modules": null,
-      "bamToFastq.fileNaming": "{PU}_{PL}_test01",
+      "bamToFastq.fileNaming": "{LB}_{PU}",
       "bamToFastq.haveCustomDirRename.timeout": null,
       "bamToFastq.noCustomDirRename.timeout": null
     },
@@ -199,18 +231,34 @@
     },
     "id": "bamToFastq_dataset02",
     "metadata": {
-      "bamToFastq.flagStat": {
+      "bamToFastq.bamFileFlagstat": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset02_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
       },
-      "bamToFastq.modFastqs": {
+      "bamToFastq.fastqc": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset02_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.fastqs": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
+              }
+          ],
+          "type": "ALL"
+      },
+      "bamToFastq.summary": {
+          "contents": [
+              {
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -218,7 +266,7 @@
       "bamToFastq.copyLog": {
           "contents": [
               {
-                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset02_@JENKINSID@"
+                  "outputDirectory": "@SCRATCH@/@DATE@_Workflow_bamToFastqWorkflow_bamToFastq_dataset01m_@JENKINSID@"
               }
           ],
           "type": "ALL"
@@ -228,7 +276,7 @@
       {
           "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
           "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.1.0/bamToFastq_dataset02.metrics",
+          "output_metrics": "/.mounts/labs/gsi/testdata/bamToFastq/output_metrics/1.2.0/bamToFastq_dataset02.metrics",
           "type": "script"
       }
     ]
