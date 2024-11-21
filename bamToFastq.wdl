@@ -105,18 +105,25 @@ workflow bamToFastq {
              id = fqidhd
          }
 
-         call copyOutFastq {
+         call copyOutFastq as copyFastqs {
            input:
-               Fastq = fq,
-               outputDir = finalOutputDirectory 
+             Fastq = fq,
+             outputDir = finalOutputDirectory 
         }
       }
 
       Array[File] fastqcFilesHaveDir = flatten(haveCustomDirReview.fastqcDataFiles)
+      scatter(fqc in flatten(haveCustomDirReview.fastqcDataFiles)) {
+        call copyOutFastq as copyFastQC {
+          input:
+            Fastq = fqc,
+            outputDir = finalOutputDirectory    
+        }
+      }
     
       call composeLog {
         input:
-            messages = copyOutFastq.message
+            messages = copyFastqs.message
       }
 
     } 
@@ -153,6 +160,19 @@ workflow bamToFastq {
          id = bamId,
          samstats = examineBam.samstats,
          fastqc = select_first([fastqcFilesHaveDir,fastqcFilesNoDir])
+    }
+
+    # =============================================================================
+    # QC files are always provisioned and also, copied if custom output dir passed:
+    # =============================================================================
+    if (finalOutputDirectory != "") {
+      scatter(qcFile in [examineBam.samstats, summarize.summary]) {
+        call copyOutFastq as copyQCfiles {
+          input:
+            Fastq = qcFile,
+            outputDir = finalOutputDirectory
+        }
+      }
     }
 
     output {
@@ -594,10 +614,12 @@ task summarize {
         }
 }
 
-# ====================================================================
-# This task will either copy fastq files to a destination directory or 
+# =====================================================================
+# This task will either copy (fastq) files to a destination directory or 
 # (in a case of failure) spit out a message that it cannot copy
-# ====================================================================
+#
+# can be used to copy other files as well
+# =====================================================================
 task copyOutFastq {
         input {
             File Fastq

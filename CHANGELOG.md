@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - functions for additional checks, stats and QC summary
 ### Changed
 - adjusted regression tests
+- copyOut  task for additional outputs
 
 ## [1.1.0] - 2024-09-24
 ### Changed
